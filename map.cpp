@@ -21,12 +21,12 @@ static const unsigned char ESC = 27;
 /** ImageIO handlers */
 
 static int inW, inH, outW, outH;
-static double *hsvPixmap, avgLum;
+static double *hsvPixmap;
 static unsigned char *outPixmap;
 static std::string input, output;
 
 static ImageIO ioOrigin = ImageIO();
-static ImageIO ioWarped = ImageIO();
+static ImageIO ioMapped = ImageIO();
 
 void initHSVPixmap(int w, int h, const unsigned char *pixmap)
 {
@@ -102,7 +102,7 @@ void loadImage()
 	inH = ioOrigin.getHeight();
 
 	// inverseMap(inW, inH, ioOrigin.pixmap);
-	ioWarped.setPixmap(outW, outH, outPixmap);
+	ioMapped.setPixmap(outW, outH, outPixmap);
 }
 
 void displayOriginWindow() 
@@ -116,7 +116,7 @@ void displayWarpedWindow()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	ioWarped.draw();
+	ioMapped.draw();
 }
 
 void handleReshape(int width, int height) 
@@ -133,7 +133,7 @@ void handleKeyboard(unsigned char key, int x, int y)
 {
 	switch(key) {
 		case 'w': case 'W': 
-			ioWarped.saveImage(output); break;
+			ioMapped.saveImage(output); break;
   	case 'q': case 'Q': case ESC: 
   		exit(0); break;
   }	
