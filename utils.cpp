@@ -1,5 +1,7 @@
 #include <cmath>
 #include <limits>
+#include <sstream>
+#include <iomanip>
 #include <iostream>
 
 #include "utils.h"
@@ -109,5 +111,12 @@ void Utils::HSVtoRGB(double h, double s, double v, double &r, double &g, double 
 	      b = q;
 	      break;
   }
+}
+
+double Utils::round(double number, unsigned int bits) {
+  std::stringstream ss;
+  ss << std::fixed << std::setprecision(bits) << number;
+  ss >> number;
+  return number;
 }
 

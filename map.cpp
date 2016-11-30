@@ -20,10 +20,11 @@ static const unsigned char ESC = 27;
 
 /** ImageIO handlers */
 
-static int inW, inH, outW, outH;
+static int inW, inH;
 static double *hsvPixmap;
 static unsigned char *outPixmap;
 static std::string input, output;
+static double palette[] = {0, 0, 0, 0, 0, 0.5, 0, 0, 1};
 
 static ImageIO ioOrigin = ImageIO();
 static ImageIO ioMapped = ImageIO();
@@ -56,27 +57,57 @@ void setupOutPixmap(int w, int h)
 				outPixmap[(i * w + j) * RGBA + channel] = 0;
 }
 
-/** Calculate output image size */
-
-void setOutputSize(int &w, int &h)
+void prepareDisplay()
 {
-	int maxX, maxY = 0;
-	int *xs = new int[2]; // x coordinates
-	int *ys = new int[2]; // y coordinates
+	int pos;
+	double r, g, b;
+	
+	setupOutPixmap(inW, inH);
+	
+	for (int i = 0; i < inH; ++i) {
+		for (int j = 0; j < inW; ++j) {
+			pos = i * inW + j;
+			Utils::getInstance().HSVtoRGB(hsvPixmap[pos * HSV + 0], hsvPixmap[pos * HSV + 1], hsvPixmap[pos * HSV + 2], r, g, b);
+			outPixmap[pos * RGBA + R] = (int)r * 255;
+			outPixmap[pos * RGBA + G] = (int)g * 255;
+			outPixmap[pos * RGBA + B] = (int)b * 255;
+		}
+	}
+}
 
-	xs[0] = 0;	xs[1] = inW; 
-	ys[0] = 0;	ys[1] = inH;
+void process()
+{
+	double avgV = 0;
+	for (int i = 0; i < inH; ++i) 
+		for (int j = 0; j < inW; ++j) 
+			avgV += hsvPixmap[(i * inW + j) * HSV + 2];
+	avgV /= (inH * inW);
+	
+	std::cout << "avgV " << avgV << std::endl;
 
-	for (int i = 0; i < 2; ++i) {
-	 	for (int j = 0; j < 2; ++j) {
-	 		// maxX = fmax(maxX, U(xs[i], ys[j]));
-	 		// maxY = fmax(maxY, V(xs[i], ys[j]));
-	 	}
+	int pos;
+	double v;
+	for (int i = 0; i < inH; ++i) {
+		for (int j = 0; j < inW; ++j) {
+			pos = i * inW + j;
+			v = Utils::getInstance().round(hsvPixmap[pos * HSV + 2], 2);
+			if (v < 0.5) {
+				hsvPixmap[pos * HSV + 0] = palette[0 * HSV + 0];
+				hsvPixmap[pos * HSV + 1] = palette[1 * HSV + 1];
+				hsvPixmap[pos * HSV + 2] = palette[0 * HSV + 2];
+			} else if (v >= 0.5 && v < avgV) {
+				hsvPixmap[pos * HSV + 0] = palette[1 * HSV + 0];
+				hsvPixmap[pos * HSV + 1] = palette[1 * HSV + 1];
+				hsvPixmap[pos * HSV + 2] = palette[1 * HSV + 2];
+			} else if (v >= avgV) {
+				hsvPixmap[pos * HSV + 0] = palette[2 * HSV + 0];
+				hsvPixmap[pos * HSV + 1] = palette[1 * HSV + 1];
+				hsvPixmap[pos * HSV + 2] = palette[2 * HSV + 2];
+			}
+		}
 	}
 
-	w = maxX;
-	h = maxY;
-	setupOutPixmap(w, h);
+	prepareDisplay();
 }
 
 bool parseCommandLine(int argc, char* argv[]) 
@@ -100,9 +131,6 @@ void loadImage()
 
 	inW = ioOrigin.getWidth();
 	inH = ioOrigin.getHeight();
-
-	// inverseMap(inW, inH, ioOrigin.pixmap);
-	ioMapped.setPixmap(outW, outH, outPixmap);
 }
 
 void displayOriginWindow() 
@@ -149,6 +177,8 @@ int main(int argc, char *argv[])
 	}
 
 	initHSVPixmap(inW, inH, ioOrigin.pixmap);
+	process();
+	ioMapped.setPixmap(inW, inH, outPixmap);
 
 	// Origin image window
 	glutInitWindowSize(inW, inH);
@@ -158,7 +188,8 @@ int main(int argc, char *argv[])
 	glutReshapeFunc(handleReshape);
 
 	// Warped image window
-	glutInitWindowSize(outW, outH);
+	glutInitWindowSize(inW, inH);
+  glutInitWindowPosition(glutGet(GLUT_WINDOW_X) + inW, 0);
 	glutCreateWindow("Warped Image");
 	glutDisplayFunc(displayWarpedWindow);
 	glutKeyboardFunc(handleKeyboard);
