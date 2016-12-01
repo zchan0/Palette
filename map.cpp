@@ -39,8 +39,8 @@ void initHSVPixmap(int w, int h, const unsigned char *pixmap)
 			pos = i * w + j;
 			Utils::getInstance().RGBtoHSV(pixmap[pos * RGBA + R], pixmap[pos * RGBA + G], pixmap[pos * RGBA + B], hh, s, v);
 			hsvPixmap[pos * HSV + 0] = std::ceil(hh);
-			hsvPixmap[pos * HSV + 1] = s;
-			hsvPixmap[pos * HSV + 2] = v;	
+			hsvPixmap[pos * HSV + 1] = Utils::getInstance().round(s, 2);
+			hsvPixmap[pos * HSV + 2] = Utils::getInstance().round(v, 2);	
 		}
 	}
 }
@@ -59,18 +59,21 @@ void setupOutPixmap(int w, int h)
 
 void prepareDisplay()
 {
-	int pos;
-	double r, g, b;
+	double h, s, v, r, g, b;
 	
 	setupOutPixmap(inW, inH);
 	
 	for (int i = 0; i < inH; ++i) {
 		for (int j = 0; j < inW; ++j) {
-			pos = i * inW + j;
-			Utils::getInstance().HSVtoRGB(hsvPixmap[pos * HSV + 0], hsvPixmap[pos * HSV + 1], hsvPixmap[pos * HSV + 2], r, g, b);
-			outPixmap[pos * RGBA + R] = (int)r * 255;
-			outPixmap[pos * RGBA + G] = (int)g * 255;
-			outPixmap[pos * RGBA + B] = (int)b * 255;
+			h = hsvPixmap[(i * inW + j) * HSV + 0];
+			s = hsvPixmap[(i * inW + j) * HSV + 1];
+			v = hsvPixmap[(i * inW + j) * HSV + 2];
+
+			Utils::getInstance().HSVtoRGB(h, s, v, r, g, b);
+
+			outPixmap[(i * inW + j) * RGBA + R] = (int)std::ceil(r * 255);
+			outPixmap[(i * inW + j) * RGBA + G] = (int)std::ceil(g * 255);
+			outPixmap[(i * inW + j) * RGBA + B] = (int)std::ceil(b * 255);
 		}
 	}
 }
@@ -90,19 +93,15 @@ void process()
 	for (int i = 0; i < inH; ++i) {
 		for (int j = 0; j < inW; ++j) {
 			pos = i * inW + j;
-			v = Utils::getInstance().round(hsvPixmap[pos * HSV + 2], 2);
+			v = hsvPixmap[pos * HSV + 2];
 			if (v < 0.5) {
 				hsvPixmap[pos * HSV + 0] = palette[0 * HSV + 0];
-				hsvPixmap[pos * HSV + 1] = palette[1 * HSV + 1];
-				hsvPixmap[pos * HSV + 2] = palette[0 * HSV + 2];
 			} else if (v >= 0.5 && v < avgV) {
 				hsvPixmap[pos * HSV + 0] = palette[1 * HSV + 0];
-				hsvPixmap[pos * HSV + 1] = palette[1 * HSV + 1];
-				hsvPixmap[pos * HSV + 2] = palette[1 * HSV + 2];
-			} else if (v >= avgV) {
+			} else if (v >= avgV && v < 0.8) {
 				hsvPixmap[pos * HSV + 0] = palette[2 * HSV + 0];
-				hsvPixmap[pos * HSV + 1] = palette[1 * HSV + 1];
-				hsvPixmap[pos * HSV + 2] = palette[2 * HSV + 2];
+			} else {
+				hsvPixmap[pos * HSV + 0] = palette[0 * HSV + 0];
 			}
 		}
 	}
