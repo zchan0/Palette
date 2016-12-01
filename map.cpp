@@ -11,23 +11,22 @@
 
 #include "ImageIO/ImageIO.h"
 #include "utils.h"
+#include "palette.h"
 
 /** Special vars */
-
-static const int HSV = 3;
 static const double PI = 3.14159265;
 static const unsigned char ESC = 27;
 
 /** ImageIO handlers */
-
 static int inW, inH;
 static double *hsvPixmap;
 static unsigned char *outPixmap;
 static std::string input, output;
-static double palette[] = {0, 0, 0, 0, 0, 0.5, 0, 0, 1};
 
 static ImageIO ioOrigin = ImageIO();
 static ImageIO ioMapped = ImageIO();
+
+static std::vector<HSVPixel> palette;
 
 void initHSVPixmap(int w, int h, const unsigned char *pixmap)
 {
@@ -55,6 +54,12 @@ void setupOutPixmap(int w, int h)
 			for (int channel = 0; channel < RGBA; ++channel)
 				/** Init alpha channel to 0, make no color value pixel to be transparent */
 				outPixmap[(i * w + j) * RGBA + channel] = 0;
+}
+
+void loadPalette()
+{
+	Palette p = Palette("bgw.pal");
+	palette = p.getPalette();
 }
 
 void prepareDisplay()
@@ -88,6 +93,8 @@ void process()
 	
 	std::cout << "avgV " << avgV << std::endl;
 
+	loadPalette();
+
 	int pos;
 	double v;
 	for (int i = 0; i < inH; ++i) {
@@ -95,13 +102,13 @@ void process()
 			pos = i * inW + j;
 			v = hsvPixmap[pos * HSV + 2];
 			if (v < 0.5) {
-				hsvPixmap[pos * HSV + 0] = palette[0 * HSV + 0];
+				hsvPixmap[pos * HSV + 0] = palette[0].h;
 			} else if (v >= 0.5 && v < avgV) {
-				hsvPixmap[pos * HSV + 0] = palette[1 * HSV + 0];
+				hsvPixmap[pos * HSV + 0] = palette[1].h;
 			} else if (v >= avgV && v < 0.8) {
-				hsvPixmap[pos * HSV + 0] = palette[2 * HSV + 0];
+				hsvPixmap[pos * HSV + 0] = palette[2].h;
 			} else {
-				hsvPixmap[pos * HSV + 0] = palette[0 * HSV + 0];
+				hsvPixmap[pos * HSV + 0] = palette[0].h;
 			}
 		}
 	}
@@ -189,7 +196,7 @@ int main(int argc, char *argv[])
 	// Warped image window
 	glutInitWindowSize(inW, inH);
   glutInitWindowPosition(glutGet(GLUT_WINDOW_X) + inW, 0);
-	glutCreateWindow("Warped Image");
+	glutCreateWindow("Mapped Image");
 	glutDisplayFunc(displayWarpedWindow);
 	glutKeyboardFunc(handleKeyboard);
 	glutReshapeFunc(handleReshape);

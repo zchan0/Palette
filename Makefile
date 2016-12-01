@@ -14,8 +14,8 @@ else
 endif
 
 EXE			= map 
-HFILES  = ImageIO/ImageIO.${H} ImageIO/Image.${H} utils.${H} 
-OBJS    = ImageIO/ImageIO.o ImageIO/Image.o utils.o
+HFILES  = ImageIO/ImageIO.${H} ImageIO/Image.${H} utils.${H} palette.${H}
+OBJS    = ImageIO/ImageIO.o ImageIO/Image.o utils.o palette.o
 
 all: ${EXE}
 
@@ -33,6 +33,9 @@ Image.o: ImageIO/Image.${C} ${HFILES}
 
 utils.o: utils.${C} ${HFILES}
 	${CC} ${CFLAGS} -c utils.${C} 
+
+palette.o: palette.${C} ${HFILES}
+	${CC} ${CFLAGS} -c palette.${C} 
 
 clean:
 	rm -f core.* *.o *~ ${EXE} ${OBJS}
