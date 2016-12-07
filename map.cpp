@@ -58,7 +58,8 @@ void setupOutPixmap(int w, int h)
 
 void loadPalette()
 {
-	Palette p = Palette("bgw.pal");
+	Palette p = Palette("green.pal");
+	p.sort();
 	palette = p.getPalette();
 }
 
@@ -95,20 +96,34 @@ void process()
 
 	loadPalette();
 
-	int pos;
+	std::vector<double> vs;	// store hsv.v in palette
+	for (int i = 0; i < palette.size(); ++i) {
+		vs.push_back(palette[i].v);
+	}
+	Utils::getInstance().insert(vs, avgV);
+	for (int i = 0; i < vs.size(); ++i) {
+		std::cout << vs[i] << " ";
+	}
+	std::cout << std::endl;
+
+	int pos, k;
 	double v;
 	for (int i = 0; i < inH; ++i) {
 		for (int j = 0; j < inW; ++j) {
 			pos = i * inW + j;
 			v = hsvPixmap[pos * HSV + 2];
-			if (v < 0.5) {
-				hsvPixmap[pos * HSV + 0] = palette[0].h;
-			} else if (v >= 0.5 && v < avgV) {
-				hsvPixmap[pos * HSV + 0] = palette[1].h;
-			} else if (v >= avgV && v < 0.8) {
-				hsvPixmap[pos * HSV + 0] = palette[2].h;
-			} else {
-				hsvPixmap[pos * HSV + 0] = palette[0].h;
+			for (k = 0; k < vs.size() - 1; ++k) {
+				if (v < vs[k]) {
+					hsvPixmap[pos * HSV + 0] = palette[k].h;
+					break;
+				} else if (v >= vs[k] && v < vs[k + 1]) {
+					hsvPixmap[pos * HSV + 0] = palette[k + 1].h;
+					break;
+				}
+			}
+			// handle the last one
+			if (k == vs.size() - 1 && v >= vs[k]) {
+				hsvPixmap[pos * HSV + 0] = palette[k].h;
 			}
 		}
 	}

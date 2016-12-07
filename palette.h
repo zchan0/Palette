@@ -1,9 +1,13 @@
 #define HSV 3
 
-typedef struct 
+struct HSVPixel
 {
 	double h, s, v;
-} HSVPixel;
+
+	bool operator<(const HSVPixel &rhs) const {
+		return v < rhs.v;
+	}
+};
 
 class Palette
 {
@@ -14,8 +18,9 @@ class Palette
 		int size() const;	// total number of colors
 		std::vector<HSVPixel> getPalette() const;
 
+		void sort();
 		void print() const;
-	
+
 	private:
 		std::string filename;	// palette file name
 		std::vector<HSVPixel> palette;

@@ -1,5 +1,6 @@
 #include <cmath>
 #include <limits>
+#include <vector>
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -109,10 +110,16 @@ void Utils::HSVtoRGB(double h, double s, double v, double &r, double &g, double 
   }
 }
 
-double Utils::round(double number, unsigned int bits) {
+double Utils::round(double number, unsigned int bits) 
+{
   std::stringstream ss;
   ss << std::fixed << std::setprecision(bits) << number;
   ss >> number;
   return number;
 }
 
+void Utils::insert(std::vector<double> &v, double val)
+{
+  std::vector<double>::iterator ptr = std::lower_bound(v.begin(), v.end(), val, std::less<double>());
+  v.insert(ptr, val);
+}

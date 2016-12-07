@@ -1,6 +1,7 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 #include "palette.h"
 #include "ImageIO/Image.h"
@@ -9,8 +10,8 @@ static const std::string path = "palettes/";
 
 Palette::~Palette()
 {
-		if (pixmap)
-			delete []pixmap;
+	if (pixmap)
+		delete []pixmap;
 }
 
 Palette::Palette(const std::string name): filename(path + name)
@@ -67,6 +68,11 @@ std::vector<HSVPixel> Palette::getPalette() const
 int Palette::size() const 
 {
 	return palette.size();
+}
+
+void Palette::sort()
+{
+	std::sort(palette.begin(), palette.end());
 }
 
 void Palette::print() const
