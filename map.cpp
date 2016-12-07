@@ -21,7 +21,7 @@ static const unsigned char ESC = 27;
 static int inW, inH;
 static double *hsvPixmap;
 static unsigned char *outPixmap;
-static std::string input, output;
+static std::string input, output, paletteName;
 
 static ImageIO ioOrigin = ImageIO();
 static ImageIO ioMapped = ImageIO();
@@ -58,7 +58,7 @@ void setupOutPixmap(int w, int h)
 
 void loadPalette()
 {
-	Palette p = Palette("green.pal");
+	Palette p = Palette(paletteName);
 	p.sort();
 	palette = p.getPalette();
 }
@@ -134,13 +134,14 @@ void process()
 bool parseCommandLine(int argc, char* argv[]) 
 {
   switch (argc) {
-  case 2: case 3:
+  case 3: case 4:
   	input  = argv[1];
-    output = argv[2] != NULL ? argv[2] : "output.png";
+  	paletteName = argv[2];
+    output = argv[3] != NULL ? argv[2] : "output.png";
     return true; break;
 
   default:
-  	std::cerr << "Usage: warp inimage.png [outimage.png]" << std:: endl;
+  	std::cerr << "Usage: map inimage.png paletteName [outimage.png]" << std:: endl;
     exit(1);
   	return false; break;
   }
